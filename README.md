@@ -1,8 +1,7 @@
-# HideInTrunk
- Hide in Trunk Script for Fivem
- 
- #Features at the moment:
- 
- 1. hide in Trunk or open Trunk
- 2. Only on not locked cars
- 3. Only when there is no one on the driver seat. To prevent jumping in npc cars while they are driving
+Forked From HideInTrunk
+
+Changelog:
+- Made Standalone (Should Have Been In The First Place)
+- Fixed Falling Through The Map When Pressing F In Trunk
+- Removed Checking For Locked Vehicle (Personally Didn't Need It)
+- Updated Notifcations (https://github.com/Switty6/swt_notifications)
