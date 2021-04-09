@@ -1,6 +1,5 @@
 local inTrunk = false
 
-ESX = nil
 Citizen.CreateThread(function()
     while true do
         Wait(0)
@@ -9,6 +8,7 @@ Citizen.CreateThread(function()
             if DoesEntityExist(vehicle) or not IsPedDeadOrDying(PlayerPedId()) or not IsPedFatallyInjured(PlayerPedId()) then
                 local coords = GetWorldPositionOfEntityBone(vehicle, GetEntityBoneIndexByName(vehicle, 'boot'))
                 SetEntityCollision(PlayerPedId(), false, false)
+				DisableControlAction(0, 23, true) 
                 DrawText3D(coords, '[E] leave Trunk')
 
                 if GetVehicleDoorAngleRatio(vehicle, 5) < 0.9 then
@@ -45,13 +45,9 @@ Citizen.CreateThread(function()
 end)   
 
 Citizen.CreateThread(function()
-	while ESX == nil do TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end) Wait(0) end
-    while not NetworkIsSessionStarted() or ESX.GetPlayerData().job == nil do Wait(0) end
+    while not NetworkIsSessionStarted() do Wait(0) end
     while true do
         local vehicle = GetClosestVehicle(GetEntityCoords(PlayerPedId()), 10.0, 0, 70)
-		--Lockstatus
-		local lockStatus = GetVehicleDoorLockStatus(vehicle)
-		--Lockstatus End
         if DoesEntityExist(vehicle) and IsVehicleSeatFree(vehicle,-1)--GetPedInVehicleSeat(vehicle, false)
 		then
             local trunk = GetEntityBoneIndexByName(vehicle, 'boot')
@@ -60,26 +56,17 @@ Citizen.CreateThread(function()
                 if GetDistanceBetweenCoords(GetEntityCoords(PlayerPedId()), coords, true) <= 1.5 then
                     if not inTrunk then
                         if GetVehicleDoorAngleRatio(vehicle, 5) < 0.9 then
-                            DrawText3D(coords, '[E] Hide\n[H] Open')
+                            DrawText3D(coords, '[E] Hide')
 								if IsControlJustReleased(0, 74)then
-									if lockStatus == 1 then --unlocked
-										SetCarBootOpen(vehicle)
-									elseif lockStatus == 2 then -- locked
-										ESX.ShowNotification('Car is locked')
-									end
 								end
                         else
-                            DrawText3D(coords, '[E] Hide\n[H] Open')
-                            if IsControlJustReleased(0, 74) then
-                                SetVehicleDoorShut(vehicle, 5)
-                            end
+                            DrawText3D(coords, '[E] Hide')
                         end
                     end
                     if IsControlJustReleased(0, 38) and not inTrunk then
-                        local player = ESX.Game.GetClosestPlayer()
+                        local player = GetPlayerFromServerId(id)
                         local playerPed = GetPlayerPed(player)
 						local playerPed2 = GetPlayerPed(-1)
-						if lockStatus == 1 then --unlocked
 							if DoesEntityExist(playerPed) then
 								if not IsEntityAttached(playerPed) or GetDistanceBetweenCoords(GetEntityCoords(playerPed), GetEntityCoords(PlayerPedId()), true) >= 5.0 then
 									SetCarBootOpen(vehicle)
@@ -93,12 +80,9 @@ Citizen.CreateThread(function()
 									Wait(1500)
 									SetVehicleDoorShut(vehicle, 5)
 								else
-									ESX.ShowNotification('There is allready someone in the trunk!')
+									TriggerEvent("swt_notifications:Icon","Somebody Is Already In The Trunk","top-right",3000,"negative","grey-1",true,"warning")
 								end
 							end
-						elseif lockStatus == 2 then -- locked
-							ESX.ShowNotification('Car is locked')
-						end
                     end
                 end
             end
