@@ -1,4 +1,4 @@
-Forked From HideInTrunk [EGUltraTM](https://github.com/EGUltraTM)
+Forked From HideInTrunk By [EGUltraTM](https://github.com/EGUltraTM)
 
 Changelog:
 - Made Standalone (Should Have Been In The First Place)
