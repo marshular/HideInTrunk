@@ -1,4 +1,4 @@
-Forked From HideInTrunk
+Forked From HideInTrunk (@EGUltra)
 
 Changelog:
 - Made Standalone (Should Have Been In The First Place)
