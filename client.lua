@@ -8,8 +8,8 @@ Citizen.CreateThread(function()
             if DoesEntityExist(vehicle) or not IsPedDeadOrDying(PlayerPedId()) or not IsPedFatallyInjured(PlayerPedId()) then
                 local coords = GetWorldPositionOfEntityBone(vehicle, GetEntityBoneIndexByName(vehicle, 'boot'))
                 SetEntityCollision(PlayerPedId(), false, false)
-				DisableControlAction(0, 23, true) 
-                alert("Press ~INPUT_DETONATE~ to Leave Trunk")
+		DisableControlAction(0, 23, true) 
+                lib.showTextUI('[F] - Get Out')
 
                 if GetVehicleDoorAngleRatio(vehicle, 5) < 0.9 then
                     SetEntityVisible(PlayerPedId(), false, false)
@@ -44,10 +44,6 @@ Citizen.CreateThread(function()
     end
 end)   
 
-                        --if GetVehicleDoorAngleRatio(vehicle, 5) < 0.9 then
-                            --alert("Press ~INPUT_DETONATE~ to Hide in Trunk\nPress ~INPUT_VEH_HEADLIGHT~ to Open/Close Trunk")
-                        --end
-
 Citizen.CreateThread(function()
     while not NetworkIsSessionStarted() do Wait(0) end
     while true do
@@ -60,11 +56,11 @@ Citizen.CreateThread(function()
                 if GetDistanceBetweenCoords(GetEntityCoords(PlayerPedId()), coords, true) <= 1.5 then
                     if not inTrunk then
                         if GetVehicleDoorAngleRatio(vehicle, 5) < 0.9 then
-                            alert("Press ~INPUT_DETONATE~ to Hide in Trunk\nPress ~INPUT_VEH_HEADLIGHT~ to Open Trunk")
+                            lib.showTextUI('[H] - Open')
 								if IsControlJustReleased(0, 74)then
 								end
                         else
-                            alert("Press ~INPUT_DETONATE~ to Hide in Trunk\nPress ~INPUT_VEH_HEADLIGHT~ to Close Trunk")
+                            lib.showTextUI('[H] - Close\n[E] - Hide')
                         end
                     end
                     if IsControlJustReleased(0, 47) and not inTrunk then
@@ -129,10 +125,4 @@ function VehicleInFront()
     local rayHandle = CastRayPointToPoint(pos.x, pos.y, pos.z, entityWorld.x, entityWorld.y, entityWorld.z, 10, plyPed, 0)
     local a, b, c, d, result = GetRaycastResult(rayHandle)
     return result
-end
-
-function alert(msg) 
-    SetTextComponentFormat("STRING")
-    AddTextComponentString(msg)
-    DisplayHelpTextFromStringLabel(0, 0, 1, -1)
 end
