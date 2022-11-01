@@ -1,6 +1,6 @@
 fx_version 'bodacious'
-games { 'gta5' }
+game 'gta5'
 
-client_scripts {
-	'client.lua'
-}
+shared_script '@ox_lib/init.lua'
+
+client_script 'client.lua'
