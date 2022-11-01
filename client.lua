@@ -1,98 +1,3 @@
-local inTrunk = false
-
-Citizen.CreateThread(function()
-    while true do
-        Wait(0)
-        if inTrunk then
-            local vehicle = GetEntityAttachedTo(PlayerPedId())
-            if DoesEntityExist(vehicle) or not IsPedDeadOrDying(PlayerPedId()) or not IsPedFatallyInjured(PlayerPedId()) then
-                local coords = GetWorldPositionOfEntityBone(vehicle, GetEntityBoneIndexByName(vehicle, 'boot'))
-                SetEntityCollision(PlayerPedId(), false, false)
-		DisableControlAction(0, 23, true) 
-                lib.showTextUI('[F] - Get Out')
-
-                if GetVehicleDoorAngleRatio(vehicle, 5) < 0.9 then
-                    SetEntityVisible(PlayerPedId(), false, false)
-                else
-                    if not IsEntityPlayingAnim(PlayerPedId(), 'timetable@floyd@cryingonbed@base', 3) then
-                        loadDict('timetable@floyd@cryingonbed@base')
-                        TaskPlayAnim(PlayerPedId(), 'timetable@floyd@cryingonbed@base', 'base', 8.0, -8.0, -1, 1, 0, false, false, false)
-
-                        SetEntityVisible(PlayerPedId(), true, false)
-                    end
-                end
-                if IsControlJustReleased(0, 47) and inTrunk then
-                    SetCarBootOpen(vehicle)
-                    SetEntityCollision(PlayerPedId(), true, true)
-                    Wait(750)
-                    inTrunk = false
-                    DetachEntity(PlayerPedId(), true, true)
-                    SetEntityVisible(PlayerPedId(), true, false)
-                    ClearPedTasks(PlayerPedId())
-                    SetEntityCoords(PlayerPedId(), GetOffsetFromEntityInWorldCoords(PlayerPedId(), 0.0, -0.5, -0.75))
-                    Wait(250)
-                    SetVehicleDoorShut(vehicle, 5)
-                end
-            else
-                SetEntityCollision(PlayerPedId(), true, true)
-                DetachEntity(PlayerPedId(), true, true)
-                SetEntityVisible(PlayerPedId(), true, false)
-                ClearPedTasks(PlayerPedId())
-                SetEntityCoords(PlayerPedId(), GetOffsetFromEntityInWorldCoords(PlayerPedId(), 0.0, -0.5, -0.75))
-            end
-        end
-    end
-end)   
-
-Citizen.CreateThread(function()
-    while not NetworkIsSessionStarted() do Wait(0) end
-    while true do
-        local vehicle = GetClosestVehicle(GetEntityCoords(PlayerPedId()), 10.0, 0, 70)
-        if DoesEntityExist(vehicle) and IsVehicleSeatFree(vehicle,-1)--GetPedInVehicleSeat(vehicle, false)
-		then
-            local trunk = GetEntityBoneIndexByName(vehicle, 'boot')
-            if trunk ~= -1 then
-                local coords = GetWorldPositionOfEntityBone(vehicle, trunk)
-                if GetDistanceBetweenCoords(GetEntityCoords(PlayerPedId()), coords, true) <= 1.5 then
-                    if not inTrunk then
-                        if GetVehicleDoorAngleRatio(vehicle, 5) < 0.9 then
-                            lib.showTextUI('[H] - Open')
-								if IsControlJustReleased(0, 74)then
-								end
-                        else
-                            lib.showTextUI('[H] - Close\n[E] - Hide')
-                        end
-                    end
-                    if IsControlJustReleased(0, 47) and not inTrunk then
-                        local player = GetPlayerFromServerId(id)
-                        local playerPed = GetPlayerPed(player)
-						local playerPed2 = GetPlayerPed(-1)
-							if DoesEntityExist(playerPed) then
-								if not IsEntityAttached(playerPed) or GetDistanceBetweenCoords(GetEntityCoords(playerPed), GetEntityCoords(PlayerPedId()), true) >= 5.0 then
-									SetCarBootOpen(vehicle)
-									Wait(350)
-									AttachEntityToEntity(PlayerPedId(), vehicle, -1, 0.0, -2.2, 0.5, 0.0, 0.0, 0.0, false, false, false, false, 20, true)	
-									loadDict('timetable@floyd@cryingonbed@base')
-									TaskPlayAnim(PlayerPedId(), 'timetable@floyd@cryingonbed@base', 'base', 8.0, -8.0, -1, 1, 0, false, false, false)
-									Wait(50)
-									inTrunk = true
-
-									Wait(1500)
-									SetVehicleDoorShut(vehicle, 5)
-								end
-							end
-                    end
-                end
-            end
-        end
-        Wait(0)
-    end
-end)
-
-loadDict = function(dict)
-    while not HasAnimDictLoaded(dict) do Wait(0) RequestAnimDict(dict) end
-end
-
 Citizen.CreateThread(function()
     while true do
         local plyPos = GetEntityCoords(PlayerPedId())
@@ -103,20 +8,85 @@ Citizen.CreateThread(function()
             if #(plyPos - coords) <= 1.5 then
                 if not inTrunk then
                     if GetVehicleDoorAngleRatio(vehicle, 5) < 0.9 then
+                        lib.showTextUI('[H] - Open')
                         if IsControlJustReleased(0, 74)then
                             SetCarBootOpen(vehicle)
+                            lib.hideTextUI()
                         end
                     else
+                        lib.showTextUI('[H] - Close\n[E] - Hide')
                         if IsControlJustReleased(0, 74) then
                             SetVehicleDoorShut(vehicle, 5)
+                            lib.hideTextUI()
                         end
                     end
+                end
+                if IsControlJustReleased(0, 38) and not inTrunk then
+                    getInTrunk(vehicle)
+                    lib.hideTextUI()
                 end
             end
         end
         Citizen.Wait(0)
     end
 end)
+
+function getInTrunk(veh)
+    local model = GetEntityModel(veh)
+    if not DoesVehicleHaveDoor(veh, 6) and DoesVehicleHaveDoor(veh, 5) and IsThisModelACar(model) then
+        SetVehicleDoorOpen(veh, 5, 1)
+        local plyPed = PlayerPedId()
+
+        local d1,d2 = GetModelDimensions(model)
+
+        local trunkDic = "fin_ext_p1-7"
+        local trunkAnim = "cs_devin_dual-7"
+        LoadAnimDict(trunkDic)
+
+        SetBlockingOfNonTemporaryEvents(plyPed, true)                   
+        DetachEntity(plyPed)
+        ClearPedTasks(plyPed)
+        ClearPedSecondaryTask(plyPed)
+        ClearPedTasksImmediately(plyPed)
+        TaskPlayAnim(plyPed, trunkDic, trunkAnim, 8.0, 8.0, -1, 1, 999.0, 0, 0, 0)
+
+        AttachEntityToEntity(plyPed, veh, 0, -0.1,d1["y"]+0.85,d2["z"]-0.87, 0, 0, 40.0, 1, 1, 1, 1, 1, 1)
+        inTrunk = true
+        trunkVeh = veh
+
+        while inTrunk do
+            Citizen.Wait(0)
+            local coords = GetEntityCoords(PlayerPedId())
+            lib.showTextUI('[F] - Get Out')
+
+            if IsControlJustReleased(0, 23) then
+                inTrunk = false
+                lib.hideTextUI()
+            end
+
+            if not IsEntityPlayingAnim(plyPed, trunkDic, trunkAnim, 3) then
+                TaskPlayAnim(plyPed, trunkDic, trunkAnim, 8.0, 8.0, -1, 1, 999.0, 0, 0, 0)
+            end
+
+            if not DoesEntityExist(veh) then
+                inTrunk = false
+            end
+        end
+        RemoveAnimDict(trunkDic)
+        SetVehicleDoorOpen(veh, 5, 1, 0)
+        DetachEntity(plyPed)
+        Citizen.Wait(10)
+        if DoesEntityExist(veh) then 
+            local dropPosition = GetOffsetFromEntityInWorldCoords(veh, 0.0,d1["y"]-0.6,0.0)
+            SetEntityCoords(plyPed,dropPosition["x"],dropPosition["y"],dropPosition["z"])
+        else
+            ClearPedTasks(plyPed)
+            local plyCoords = GetEntityCoords(plyPed)
+            SetEntityCoords(plyped, plyCoords.x, plyCoords.y, plyCoords.x+2)
+        end
+        trunkVeh = nil
+    end
+end
 
 function VehicleInFront()
     local plyPed = PlayerPedId()
@@ -125,4 +95,8 @@ function VehicleInFront()
     local rayHandle = CastRayPointToPoint(pos.x, pos.y, pos.z, entityWorld.x, entityWorld.y, entityWorld.z, 10, plyPed, 0)
     local a, b, c, d, result = GetRaycastResult(rayHandle)
     return result
+end
+
+function LoadAnimDict(dict)
+    while (not HasAnimDictLoaded(dict)) do RequestAnimDict(dict) Citizen.Wait(5); end
 end
